@@ -709,9 +709,12 @@ function formatNum(n) {
   return n != null ? n.toLocaleString() : '0';
 }
 
-// Build a user-facing OpenAlex API URL (no api_key) and render a link
+// Build a user-facing OpenAlex web UI URL (no api_key, uses openalex.org not api.openalex.org)
+const UI_URL = 'https://openalex.org';
+
 function buildQueryUrl(filter, groupBy) {
-  return `${BASE_URL}/works?filter=${encodeURIComponent(filter)}&group_by=${encodeURIComponent(groupBy)}&per_page=200`;
+  const uiFilter = filter.replace('authorships.institutions.id:', 'authorships.institutions.lineage:');
+  return `${UI_URL}/works?filter=${encodeURIComponent(uiFilter)}&group_by=${encodeURIComponent(groupBy)}&per_page=200`;
 }
 
 function setQueryLink(containerId, filter, groupBy, label) {
@@ -737,7 +740,8 @@ function addOpenAlexClickHandler(divId) {
 
 // Build a single-work list URL (no group_by) for clicking into specific data points
 function buildWorksUrl(filter) {
-  return `${BASE_URL}/works?filter=${encodeURIComponent(filter)}&per_page=25&sort=cited_by_count:desc`;
+  const uiFilter = filter.replace('authorships.institutions.id:', 'authorships.institutions.lineage:');
+  return `${UI_URL}/works?filter=${encodeURIComponent(uiFilter)}&per_page=25&sort=cited_by_count:desc`;
 }
 
 // ============================================================
