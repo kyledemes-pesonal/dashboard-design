@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VIVA Publishing Dashboard</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #1a365d;
+      --secondary: #2b6cb0;
+      --bg: #f7fafc;
+      --card-bg: #ffffff;
+      --text: #2d3748;
+      --text-light: #718096;
+      --border: #e2e8f0;
+      --gold: #d69e2e;
+      --green: #38a169;
+      --hybrid: #805ad5;
+      --bronze: #c05621;
+      --closed: #a0aec0;
+      --diamond: #3182ce;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header h1 { font-size: 1.5rem; font-weight: 600; }
+    header .subtitle { font-size: 0.85rem; opacity: 0.8; }
+
+    .container { max-width: 1400px; margin: 0 auto; padding: 0 1rem; }
+
+    /* Filter Bar */
+    .filter-bar {
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: flex-end;
+    }
+
+    .filter-group { display: flex; flex-direction: column; gap: 0.25rem; }
+    .filter-group label { font-size: 0.75rem; font-weight: 600; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.05em; }
+    .filter-group select, .filter-group input {
+      padding: 0.4rem 0.6rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.85rem;
+      background: white;
+      color: var(--text);
+      min-width: 140px;
+    }
+
+    .filter-actions { display: flex; gap: 0.5rem; align-items: flex-end; }
+    .btn {
+      padding: 0.4rem 1rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .btn-primary { background: var(--secondary); color: white; }
+    .btn-primary:hover { background: #2c5282; }
+    .btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+
+    /* Multi-select dropdown */
+    .multi-select {
+      position: relative;
+      min-width: 200px;
+    }
+    .multi-select-trigger {
+      padding: 0.4rem 0.6rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.85rem;
+      background: white;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      min-height: 34px;
+    }
+    .multi-select-trigger::after { content: '\25BC'; font-size: 0.65rem; color: var(--text-light); }
+    .multi-select-dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      z-index: 100;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .multi-select-dropdown.open { display: block; }
+    .multi-select-dropdown label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      text-transform: none;
+      letter-spacing: normal;
+      font-weight: normal;
+      color: var(--text);
+    }
+    .multi-select-dropdown label:hover { background: var(--bg); }
+    .multi-select-actions {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.4rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .multi-select-actions button {
+      font-size: 0.75rem;
+      color: var(--secondary);
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    /* OA Status checkboxes */
+    .oa-checkboxes { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .oa-check {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .oa-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .oa-dot.gold { background: var(--gold); }
+    .oa-dot.green { background: var(--green); }
+    .oa-dot.hybrid { background: var(--hybrid); }
+    .oa-dot.bronze { background: var(--bronze); }
+    .oa-dot.closed { background: var(--closed); }
+    .oa-dot.diamond { background: var(--diamond); }
+
+    /* Tab Bar */
+    .tab-bar {
+      display: flex;
+      border-bottom: 2px solid var(--border);
+      background: var(--card-bg);
+      padding: 0 2rem;
+    }
+    .tab {
+      padding: 0.75rem 1.25rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-light);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: color 0.2s, border-color 0.2s;
+      white-space: nowrap;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--secondary); border-bottom-color: var(--secondary); }
+
+    /* Content */
+    .tab-content { display: none; padding: 1.5rem 0; }
+    .tab-content.active { display: block; }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+    .card h3 { font-size: 1rem; margin-bottom: 0.75rem; color: var(--primary); }
+
+    .chart-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+
+    /* Publisher pills */
+    .publisher-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .pub-pill {
+      padding: 0.35rem 0.85rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      transition: all 0.2s;
+    }
+    .pub-pill:hover { border-color: var(--secondary); }
+    .pub-pill.active { background: var(--secondary); color: white; border-color: var(--secondary); }
+
+    /* Summary cards */
+    .summary-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .summary-card {
+      background: var(--card-bg);
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      padding: 1.25rem;
+      text-align: center;
+    }
+    .summary-card .value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .summary-card .label {
+      font-size: 0.8rem;
+      color: var(--text-light);
+      margin-top: 0.25rem;
+    }
+
+    /* Loading */
+    .loading-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.85);
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      gap: 0.5rem;
+      z-index: 10;
+      border-radius: 8px;
+    }
+    .loading-overlay.show { display: flex; }
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--secondary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 0.85rem; color: var(--text-light); }
+
+    .chart-wrap { position: relative; min-height: 350px; }
+
+    .error-msg {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-light);
+    }
+    .error-msg button { margin-top: 0.5rem; }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      color: var(--text-light);
+      font-size: 0.8rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+    footer a { color: var(--secondary); }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .filter-bar { padding: 0.75rem 1rem; }
+      .tab-bar { overflow-x: auto; padding: 0 1rem; }
+      .chart-row { grid-template-columns: 1fr; }
+      header { padding: 0.75rem 1rem; }
+      .summary-cards { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>VIVA Publishing Dashboard</h1>
+    <div class="subtitle">Virginia's Academic Library Consortium &middot; Powered by OpenAlex</div>
+  </div>
+</header>
+
+<!-- Filter Bar -->
+<div class="filter-bar">
+  <div class="filter-group">
+    <label>Institution Type</label>
+    <select id="filter-inst-type">
+      <option value="all">All Institutions</option>
+      <option value="publicDoctoral">Public Doctoral (8)</option>
+      <option value="publicFourYear">Public Four-Year (7)</option>
+      <option value="publicTwoYear">Public Two-Year (24)</option>
+      <option value="privateNonprofit">Private Nonprofit (30)</option>
+    </select>
+  </div>
+
+  <div class="filter-group">
+    <label>Institutions</label>
+    <div class="multi-select" id="inst-multi-select">
+      <div class="multi-select-trigger" id="inst-trigger">All Institutions</div>
+      <div class="multi-select-dropdown" id="inst-dropdown">
+        <div class="multi-select-actions">
+          <button onclick="instSelectAll()">Select All</button>
+          <button onclick="instDeselectAll()">Deselect All</button>
+        </div>
+        <div id="inst-checkboxes"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="filter-group">
+    <label>From Year</label>
+    <select id="filter-year-from"></select>
+  </div>
+
+  <div class="filter-group">
+    <label>To Year</label>
+    <select id="filter-year-to"></select>
+  </div>
+
+  <div class="filter-group">
+    <label>OA Status</label>
+    <div class="oa-checkboxes" id="global-oa-checks">
+      <label class="oa-check"><input type="checkbox" value="gold" checked><span class="oa-dot gold"></span>Gold</label>
+      <label class="oa-check"><input type="checkbox" value="green" checked><span class="oa-dot green"></span>Green</label>
+      <label class="oa-check"><input type="checkbox" value="hybrid" checked><span class="oa-dot hybrid"></span>Hybrid</label>
+      <label class="oa-check"><input type="checkbox" value="bronze" checked><span class="oa-dot bronze"></span>Bronze</label>
+      <label class="oa-check"><input type="checkbox" value="diamond" checked><span class="oa-dot diamond"></span>Diamond</label>
+      <label class="oa-check"><input type="checkbox" value="closed" checked><span class="oa-dot closed"></span>Closed</label>
+    </div>
+  </div>
+
+  <div class="filter-actions">
+    <button class="btn btn-primary" onclick="applyFilters()">Apply</button>
+    <button class="btn btn-secondary" onclick="resetFilters()">Reset</button>
+  </div>
+</div>
+
+<!-- Tab Bar -->
+<div class="tab-bar">
+  <div class="tab active" data-tab="rp" onclick="switchTab('rp')">R&P Agreements</div>
+  <div class="tab" data-tab="subfields" onclick="switchTab('subfields')">Subject Areas</div>
+  <div class="tab" data-tab="publishers" onclick="switchTab('publishers')">Publishers</div>
+  <div class="tab" data-tab="citations" onclick="switchTab('citations')">Citation Comparison</div>
+</div>
+
+<!-- Main Content -->
+<div class="container">
+
+  <!-- R&P Agreements Tab -->
+  <div class="tab-content active" id="tab-rp">
+    <div class="card">
+      <h3>Select Publisher Agreement</h3>
+      <div class="publisher-pills" id="rp-pills"></div>
+    </div>
+    <div class="card chart-wrap" id="rp-trend-wrap">
+      <h3>OA Publishing Trend</h3>
+      <div id="rp-trend-chart"></div>
+      <div class="loading-overlay" id="rp-trend-loading"><div class="spinner"></div><div class="loading-text">Loading...</div></div>
+    </div>
+    <div class="chart-row">
+      <div class="card chart-wrap" id="rp-breakdown-wrap">
+        <h3>Current OA Status Breakdown</h3>
+        <div id="rp-breakdown-chart"></div>
+        <div class="loading-overlay" id="rp-breakdown-loading"><div class="spinner"></div><div class="loading-text">Loading...</div></div>
+      </div>
+      <div class="card chart-wrap" id="rp-subfields-wrap">
+        <h3>Top Subfields (OA Publishing)</h3>
+        <div id="rp-subfields-chart"></div>
+        <div class="loading-overlay" id="rp-subfields-loading"><div class="spinner"></div><div class="loading-text">Loading...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Subject Areas Tab -->
+  <div class="tab-content" id="tab-subfields">
+    <div class="card chart-wrap" id="subfields-chart-wrap">
+      <h3>Top 25 Subject Areas by Publication Count</h3>
+      <div id="subfields-chart" style="min-height: 700px;"></div>
+      <div class="loading-overlay" id="subfields-loading"><div class="spinner"></div><div class="loading-text">Loading...</div></div>
+    </div>
+  </div>
+
+  <!-- Publishers Tab -->
+  <div class="tab-content" id="tab-publishers">
+    <div class="card chart-wrap" id="publishers-chart-wrap">
+      <h3>Top 25 Publishers by Publication Count</h3>
+      <div id="publishers-chart" style="min-height: 700px;"></div>
+      <div class="loading-overlay" id="publishers-loading"><div class="spinner"></div><div class="loading-text">Loading...</div></div>
+    </div>
+  </div>
+
+  <!-- Citation Comparison Tab -->
+  <div class="tab-content" id="tab-citations">
+    <div class="summary-cards" id="citation-summary"></div>
+    <div class="card chart-wrap" id="citation-bar-wrap">
+      <h3>Mean &amp; Median Citations by OA Status</h3>
+      <div id="citation-bar-chart"></div>
+      <div class="loading-overlay" id="citation-bar-loading"><div class="spinner"></div><div class="loading-text">Loading...</div></div>
+    </div>
+    <div class="chart-row">
+      <div class="card chart-wrap" id="citation-dist-wrap">
+        <h3>Citation Distribution by OA Status</h3>
+        <div id="citation-dist-chart"></div>
+        <div class="loading-overlay" id="citation-dist-loading"><div class="spinner"></div><div class="loading-text">Loading...</div></div>
+      </div>
+      <div class="card chart-wrap" id="citation-trend-wrap">
+        <h3>Citation Advantage Over Time</h3>
+        <div id="citation-trend-chart"></div>
+        <div class="loading-overlay" id="citation-trend-loading"><div class="spinner"></div><div class="loading-text">Loading...</div></div>
+      </div>
+    </div>
+    <p style="text-align:center; font-size:0.8rem; color:var(--text-light); margin-top:0.5rem;">
+      Citation data loaded from static file. <span id="citation-generated-at"></span>
+    </p>
+  </div>
+
+</div>
+
+<footer>
+  Data sourced from <a href="https://openalex.org" target="_blank" rel="noopener">OpenAlex</a>, an open catalog of the global research system.
+</footer>
+
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+
+const API_KEY = 'v1hPneNb0TejwTZyZgXEaI';
+const BASE_URL = 'https://api.openalex.org';
+
+const OA_COLORS = {
+  gold: '#d69e2e',
+  green: '#38a169',
+  hybrid: '#805ad5',
+  bronze: '#c05621',
+  closed: '#a0aec0',
+  diamond: '#3182ce'
+};
+
+const OA_LABELS = {
+  gold: 'Gold',
+  green: 'Green',
+  hybrid: 'Hybrid',
+  bronze: 'Bronze',
+  closed: 'Closed',
+  diamond: 'Diamond'
+};
+
+const OA_STATUSES = ['gold', 'green', 'hybrid', 'bronze', 'diamond', 'closed'];
+
+const VIVA_INSTITUTIONS = [
+  // Public Doctoral
+  { id: 'I162714631', name: 'George Mason University', shortName: 'GMU', category: 'publicDoctoral' },
+  { id: 'I11883440', name: 'James Madison University', shortName: 'JMU', category: 'publicDoctoral' },
+  { id: 'I81365321', name: 'Old Dominion University', shortName: 'ODU', category: 'publicDoctoral' },
+  { id: 'I53559539', name: 'Radford University', shortName: 'Radford', category: 'publicDoctoral' },
+  { id: 'I51556381', name: 'University of Virginia', shortName: 'UVA', category: 'publicDoctoral' },
+  { id: 'I184840846', name: 'Virginia Commonwealth University', shortName: 'VCU', category: 'publicDoctoral' },
+  { id: 'I859038795', name: 'Virginia Tech', shortName: 'VT', category: 'publicDoctoral' },
+  { id: 'I16285277', name: 'William & Mary', shortName: 'W&M', category: 'publicDoctoral' },
+
+  // Public Four-Year
+  { id: 'I177308816', name: 'Christopher Newport University', shortName: 'CNU', category: 'publicFourYear' },
+  { id: 'I141448028', name: 'Longwood University', shortName: 'Longwood', category: 'publicFourYear' },
+  { id: 'I103087548', name: 'Norfolk State University', shortName: 'NSU', category: 'publicFourYear' },
+  { id: 'I191484440', name: 'University of Mary Washington', shortName: 'UMW', category: 'publicFourYear' },
+  { id: 'I4901143', name: "University of Virginia's College at Wise", shortName: 'UVA-Wise', category: 'publicFourYear' },
+  { id: 'I185641255', name: 'Virginia Military Institute', shortName: 'VMI', category: 'publicFourYear' },
+  { id: 'I11786554', name: 'Virginia State University', shortName: 'VSU', category: 'publicFourYear' },
+
+  // Public Two-Year
+  { id: 'I2802629350', name: 'Richard Bland College', shortName: 'RBC', category: 'publicTwoYear' },
+  { id: 'I902853741', name: 'Blue Ridge Community College', shortName: 'BRCC', category: 'publicTwoYear' },
+  { id: 'I138747737', name: 'Brightpoint Community College', shortName: 'Brightpoint', category: 'publicTwoYear' },
+  { id: 'I76440524', name: 'Central Virginia Community College', shortName: 'CVCC', category: 'publicTwoYear' },
+  { id: 'I2802296350', name: 'Danville Community College', shortName: 'DCC', category: 'publicTwoYear' },
+  { id: 'I4210162787', name: 'Eastern Shore Community College', shortName: 'ESCC', category: 'publicTwoYear' },
+  { id: 'I7079364', name: 'Germanna Community College', shortName: 'Germanna', category: 'publicTwoYear' },
+  { id: 'I2800951401', name: 'Reynolds Community College', shortName: 'Reynolds', category: 'publicTwoYear' },
+  { id: 'I2802739109', name: 'Laurel Ridge Community College', shortName: 'LRCC', category: 'publicTwoYear' },
+  { id: 'I2800645674', name: 'Mountain Empire Community College', shortName: 'MECC', category: 'publicTwoYear' },
+  { id: 'I2799815508', name: 'Mountain Gateway Community College', shortName: 'MGCC', category: 'publicTwoYear' },
+  { id: 'I2800249764', name: 'New River Community College', shortName: 'NRCC', category: 'publicTwoYear' },
+  { id: 'I920538115', name: 'Northern Virginia Community College', shortName: 'NOVA', category: 'publicTwoYear' },
+  { id: 'I102219622', name: 'Patrick & Henry Community College', shortName: 'P&HCC', category: 'publicTwoYear' },
+  { id: 'I2800666634', name: 'Paul D. Camp Community College', shortName: 'PDCCC', category: 'publicTwoYear' },
+  { id: 'I140472050', name: 'Piedmont Virginia Community College', shortName: 'PVCC', category: 'publicTwoYear' },
+  { id: 'I2800477232', name: 'Rappahannock Community College', shortName: 'RCC', category: 'publicTwoYear' },
+  { id: 'I2800823236', name: 'Southside Virginia Community College', shortName: 'SVCC', category: 'publicTwoYear' },
+  { id: 'I171343974', name: 'Southwest Virginia Community College', shortName: 'SWVCC', category: 'publicTwoYear' },
+  { id: 'I2802140220', name: 'Tidewater Community College', shortName: 'TCC', category: 'publicTwoYear' },
+  { id: 'I2800122815', name: 'Virginia Highlands Community College', shortName: 'VHCC', category: 'publicTwoYear' },
+  { id: 'I127671586', name: 'Virginia Peninsula Community College', shortName: 'VPCC', category: 'publicTwoYear' },
+  { id: 'I113949470', name: 'Virginia Western Community College', shortName: 'VWCC', category: 'publicTwoYear' },
+  { id: 'I2801288253', name: 'Wytheville Community College', shortName: 'WCC', category: 'publicTwoYear' },
+
+  // Private Nonprofit
+  { id: 'I887931861', name: 'Appalachian College of Pharmacy', shortName: 'ACP', category: 'privateNonprofit' },
+  { id: 'I2799887800', name: 'Appalachian School of Law', shortName: 'ASL', category: 'privateNonprofit' },
+  { id: 'I99215809', name: 'Averett University', shortName: 'Averett', category: 'privateNonprofit' },
+  { id: 'I307045584', name: 'Bluefield University', shortName: 'Bluefield', category: 'privateNonprofit' },
+  { id: 'I36194888', name: 'Bridgewater College', shortName: 'Bridgewater', category: 'privateNonprofit' },
+  { id: 'I200450580', name: 'Christendom College', shortName: 'Christendom', category: 'privateNonprofit' },
+  { id: 'I4387153953', name: 'Divine Mercy University', shortName: 'DMU', category: 'privateNonprofit' },
+  { id: 'I201426678', name: 'Eastern Mennonite University', shortName: 'EMU', category: 'privateNonprofit' },
+  { id: 'I896114043', name: 'Edward Via College of Osteopathic Medicine', shortName: 'VCOM', category: 'privateNonprofit' },
+  { id: 'I177855293', name: 'Emory and Henry University', shortName: 'E&H', category: 'privateNonprofit' },
+  { id: 'I152372855', name: 'Ferrum College', shortName: 'Ferrum', category: 'privateNonprofit' },
+  { id: 'I26422949', name: 'Hampden-Sydney College', shortName: 'HSC', category: 'privateNonprofit' },
+  { id: 'I151328261', name: 'Hampton University', shortName: 'Hampton', category: 'privateNonprofit' },
+  { id: 'I185439253', name: 'Hollins University', shortName: 'Hollins', category: 'privateNonprofit' },
+  { id: 'I67789559', name: 'Liberty University', shortName: 'Liberty', category: 'privateNonprofit' },
+  { id: 'I12559833', name: 'Mary Baldwin University', shortName: 'MBU', category: 'privateNonprofit' },
+  { id: 'I53276908', name: 'Marymount University', shortName: 'Marymount', category: 'privateNonprofit' },
+  { id: 'I1175298', name: 'Randolph College', shortName: 'Randolph', category: 'privateNonprofit' },
+  { id: 'I182555378', name: 'Randolph-Macon College', shortName: 'R-MC', category: 'privateNonprofit' },
+  { id: 'I153338809', name: 'Regent University', shortName: 'Regent', category: 'privateNonprofit' },
+  { id: 'I41833579', name: 'Roanoke College', shortName: 'Roanoke', category: 'privateNonprofit' },
+  { id: 'I200033832', name: 'Shenandoah University', shortName: 'Shenandoah', category: 'privateNonprofit' },
+  { id: 'I178897401', name: 'Southern Virginia University', shortName: 'SVU', category: 'privateNonprofit' },
+  { id: 'I2125089', name: 'Sweet Briar College', shortName: 'SBC', category: 'privateNonprofit' },
+  { id: 'I198073862', name: 'Union Presbyterian Seminary', shortName: 'UPSem', category: 'privateNonprofit' },
+  { id: 'I21978226', name: 'University of Lynchburg', shortName: 'Lynchburg', category: 'privateNonprofit' },
+  { id: 'I158012942', name: 'University of Richmond', shortName: 'Richmond', category: 'privateNonprofit' },
+  { id: 'I177833724', name: 'Virginia Union University', shortName: 'VUU', category: 'privateNonprofit' },
+  { id: 'I14303183', name: 'Virginia Wesleyan University', shortName: 'VWU', category: 'privateNonprofit' },
+  { id: 'I184889055', name: 'Washington and Lee University', shortName: 'W&L', category: 'privateNonprofit' },
+];
+
+const RP_PUBLISHERS = [
+  { id: 'P4310319798', name: 'ACM', fullName: 'Association for Computing Machinery', startDate: '2022-10', startYear: 2022 },
+  { id: 'P4310320006', name: 'ACS', fullName: 'American Chemical Society', startDate: '2024-01', startYear: 2024 },
+  { id: 'P4310320373', name: 'Annual Reviews', fullName: 'Annual Reviews', startDate: '2022-05', startYear: 2022, note: 'Subscribe to Open (no APCs)' },
+  { id: 'P4310311721', name: 'Cambridge UP', fullName: 'Cambridge University Press', startDate: '2023-01', startYear: 2023 },
+  { id: 'P4310320083', name: 'IOP Publishing', fullName: 'Institute of Physics Publishing', startDate: '2022-01', startYear: 2022 },
+  { id: 'P4310320298', name: 'IWA Publishing', fullName: 'International Water Association', startDate: '2023-01', startYear: 2023 },
+  { id: 'P4310315706', name: 'PLOS', fullName: 'Public Library of Science', startDate: '2024-01', startYear: 2024, endDate: '2025-12', note: 'Agreement ended Dec 2025' },
+  { id: 'P4310315676', name: 'Rockefeller UP', fullName: 'Rockefeller University Press', startDate: '2022-01', startYear: 2022 },
+  { id: 'P4310319965', name: 'Springer Nature', fullName: 'Springer Nature', startDate: '2024-01', startYear: 2024 },
+  { id: 'P4310320595', name: 'Wiley', fullName: 'Wiley', startDate: '2022-01', startYear: 2022 },
+];
+
+const PLOTLY_CONFIG = {
+  responsive: true,
+  displayModeBar: true,
+  modeBarButtonsToRemove: ['lasso2d', 'select2d'],
+  displaylogo: false,
+  toImageButtonOptions: { format: 'png', filename: 'viva-chart', scale: 2 }
+};
+
+const PLOTLY_LAYOUT = {
+  font: { family: 'system-ui, -apple-system, sans-serif', size: 13 },
+  paper_bgcolor: 'white',
+  plot_bgcolor: 'white',
+  margin: { t: 40, r: 20, b: 50, l: 60 },
+  legend: { orientation: 'h', y: -0.15 },
+};
+
+// ============================================================
+// STATE
+// ============================================================
+
+const state = {
+  filters: {
+    institutionType: 'all',
+    institutionIds: [],
+    yearFrom: 2020,
+    yearTo: 2026,
+    oaStatuses: [...OA_STATUSES],
+  },
+  activeTab: 'rp',
+  rpSelectedPublisher: RP_PUBLISHERS[9].id, // Default: Wiley
+  cache: new Map(),
+  citationData: null,
+};
+
+// ============================================================
+// API MODULE
+// ============================================================
+
+const fetchQueue = { active: 0, MAX: 5 };
+
+async function apiThrottle() {
+  while (fetchQueue.active >= fetchQueue.MAX) {
+    await new Promise(r => setTimeout(r, 50));
+  }
+}
+
+async function apiFetch(url) {
+  if (state.cache.has(url)) return state.cache.get(url);
+  await apiThrottle();
+  fetchQueue.active++;
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`API ${resp.status}: ${resp.statusText}`);
+    const data = await resp.json();
+    state.cache.set(url, data);
+    return data;
+  } finally {
+    fetchQueue.active--;
+  }
+}
+
+function getInstitutionIds() {
+  if (state.filters.institutionIds.length > 0) return state.filters.institutionIds;
+  if (state.filters.institutionType === 'all') return VIVA_INSTITUTIONS.map(i => i.id);
+  return VIVA_INSTITUTIONS.filter(i => i.category === state.filters.institutionType).map(i => i.id);
+}
+
+function buildFilter(extras = {}) {
+  const parts = [];
+  const ids = getInstitutionIds();
+  parts.push('authorships.institutions.id:' + ids.join('|'));
+
+  const yf = state.filters.yearFrom;
+  const yt = state.filters.yearTo;
+  if (yf && yt) parts.push(`publication_year:${yf}-${yt}`);
+
+  if (extras.publisher) parts.push('primary_location.source.publisher_lineage:' + extras.publisher);
+  if (extras.oaStatus) parts.push('oa_status:' + extras.oaStatus);
+  if (extras.subfield) parts.push('topics.subfield.id:' + extras.subfield);
+  return parts.join(',');
+}
+
+async function fetchGroupBy(filter, groupBy) {
+  const url = `${BASE_URL}/works?filter=${encodeURIComponent(filter)}&group_by=${encodeURIComponent(groupBy)}&per_page=200&api_key=${API_KEY}`;
+  const data = await apiFetch(url);
+  return data.group_by || [];
+}
+
+// ============================================================
+// UI HELPERS
+// ============================================================
+
+function showLoading(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.add('show');
+}
+
+function hideLoading(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('show');
+}
+
+function showError(chartId, msg) {
+  const el = document.getElementById(chartId);
+  if (el) el.innerHTML = `<div class="error-msg"><p>Failed to load data</p><p style="font-size:0.8rem">${msg}</p><button class="btn btn-secondary" onclick="renderCurrentView()">Retry</button></div>`;
+}
+
+function formatNum(n) {
+  return n != null ? n.toLocaleString() : '0';
+}
+
+// ============================================================
+// FILTER INITIALIZATION
+// ============================================================
+
+function initFilters() {
+  // Year dropdowns
+  const currentYear = new Date().getFullYear();
+  const yearFrom = document.getElementById('filter-year-from');
+  const yearTo = document.getElementById('filter-year-to');
+  for (let y = 2018; y <= currentYear; y++) {
+    yearFrom.add(new Option(y, y, y === 2020, y === 2020));
+    yearTo.add(new Option(y, y, y === currentYear, y === currentYear));
+  }
+
+  // Institution checkboxes
+  renderInstitutionCheckboxes();
+
+  // Institution type filter
+  document.getElementById('filter-inst-type').addEventListener('change', function() {
+    state.filters.institutionType = this.value;
+    state.filters.institutionIds = [];
+    renderInstitutionCheckboxes();
+  });
+
+  // Multi-select toggle
+  document.getElementById('inst-trigger').addEventListener('click', function(e) {
+    e.stopPropagation();
+    document.getElementById('inst-dropdown').classList.toggle('open');
+  });
+
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('#inst-multi-select')) {
+      document.getElementById('inst-dropdown').classList.remove('open');
+    }
+  });
+}
+
+function renderInstitutionCheckboxes() {
+  const container = document.getElementById('inst-checkboxes');
+  const type = state.filters.institutionType;
+  const institutions = type === 'all' ? VIVA_INSTITUTIONS : VIVA_INSTITUTIONS.filter(i => i.category === type);
+
+  container.innerHTML = institutions.map(inst => `
+    <label><input type="checkbox" value="${inst.id}" checked> ${inst.name}</label>
+  `).join('');
+
+  updateInstTriggerText();
+}
+
+function updateInstTriggerText() {
+  const checked = document.querySelectorAll('#inst-checkboxes input:checked');
+  const total = document.querySelectorAll('#inst-checkboxes input');
+  const trigger = document.getElementById('inst-trigger');
+  if (checked.length === total.length) {
+    trigger.textContent = 'All Institutions';
+  } else if (checked.length === 0) {
+    trigger.textContent = 'None selected';
+  } else if (checked.length <= 3) {
+    const names = [...checked].map(cb => {
+      const inst = VIVA_INSTITUTIONS.find(i => i.id === cb.value);
+      return inst ? inst.shortName : cb.value;
+    });
+    trigger.textContent = names.join(', ');
+  } else {
+    trigger.textContent = `${checked.length} selected`;
+  }
+}
+
+function instSelectAll() {
+  document.querySelectorAll('#inst-checkboxes input').forEach(cb => cb.checked = true);
+  updateInstTriggerText();
+}
+
+function instDeselectAll() {
+  document.querySelectorAll('#inst-checkboxes input').forEach(cb => cb.checked = false);
+  updateInstTriggerText();
+}
+
+function readFilters() {
+  state.filters.yearFrom = parseInt(document.getElementById('filter-year-from').value);
+  state.filters.yearTo = parseInt(document.getElementById('filter-year-to').value);
+
+  const checkedOa = [...document.querySelectorAll('#global-oa-checks input:checked')].map(cb => cb.value);
+  state.filters.oaStatuses = checkedOa;
+
+  const checkedInst = [...document.querySelectorAll('#inst-checkboxes input:checked')].map(cb => cb.value);
+  const allInst = [...document.querySelectorAll('#inst-checkboxes input')].map(cb => cb.value);
+  state.filters.institutionIds = checkedInst.length === allInst.length ? [] : checkedInst;
+}
+
+function applyFilters() {
+  readFilters();
+  state.cache.clear();
+  renderCurrentView();
+}
+
+function resetFilters() {
+  document.getElementById('filter-inst-type').value = 'all';
+  state.filters.institutionType = 'all';
+  state.filters.institutionIds = [];
+  renderInstitutionCheckboxes();
+
+  document.getElementById('filter-year-from').value = '2020';
+  document.getElementById('filter-year-to').value = new Date().getFullYear();
+
+  document.querySelectorAll('#global-oa-checks input').forEach(cb => cb.checked = true);
+
+  state.filters.yearFrom = 2020;
+  state.filters.yearTo = new Date().getFullYear();
+  state.filters.oaStatuses = [...OA_STATUSES];
+  state.cache.clear();
+  renderCurrentView();
+}
+
+// ============================================================
+// TAB NAVIGATION
+// ============================================================
+
+function switchTab(tabId) {
+  state.activeTab = tabId;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tabId));
+  document.querySelectorAll('.tab-content').forEach(tc => tc.classList.toggle('active', tc.id === `tab-${tabId}`));
+  renderCurrentView();
+}
+
+function renderCurrentView() {
+  readFilters();
+  switch (state.activeTab) {
+    case 'rp': renderRPView(); break;
+    case 'subfields': renderSubfieldsView(); break;
+    case 'publishers': renderPublishersView(); break;
+    case 'citations': renderCitationsView(); break;
+  }
+}
+
+// ============================================================
+// R&P AGREEMENTS VIEW
+// ============================================================
+
+function initRPPills() {
+  const container = document.getElementById('rp-pills');
+  container.innerHTML = RP_PUBLISHERS.map(pub => {
+    const active = pub.id === state.rpSelectedPublisher ? 'active' : '';
+    const note = pub.note ? ` (${pub.note})` : '';
+    return `<div class="pub-pill ${active}" data-pubid="${pub.id}" onclick="selectRPPublisher('${pub.id}')">${pub.name}${note}</div>`;
+  }).join('');
+}
+
+function selectRPPublisher(pubId) {
+  state.rpSelectedPublisher = pubId;
+  document.querySelectorAll('.pub-pill').forEach(p => p.classList.toggle('active', p.dataset.pubid === pubId));
+  renderRPView();
+}
+
+async function renderRPView() {
+  const pub = RP_PUBLISHERS.find(p => p.id === state.rpSelectedPublisher);
+  if (!pub) return;
+
+  // Use wider year range for trend (2 years before agreement)
+  const trendYearFrom = Math.min(state.filters.yearFrom, pub.startYear - 2);
+
+  // Trend chart
+  showLoading('rp-trend-loading');
+  showLoading('rp-breakdown-loading');
+  showLoading('rp-subfields-loading');
+
+  try {
+    // Build filter for this publisher with wider year range for trend
+    const trendFilterBase = (() => {
+      const parts = [];
+      const ids = getInstitutionIds();
+      parts.push('authorships.institutions.id:' + ids.join('|'));
+      parts.push(`publication_year:${trendYearFrom}-${state.filters.yearTo}`);
+      parts.push('primary_location.source.publisher_lineage:' + pub.id);
+      return parts.join(',');
+    })();
+
+    const trendFilterOA = trendFilterBase + ',oa_status:gold|hybrid';
+
+    const [totalByYear, oaByYear] = await Promise.all([
+      fetchGroupBy(trendFilterBase, 'publication_year'),
+      fetchGroupBy(trendFilterOA, 'publication_year'),
+    ]);
+
+    // Build trend chart
+    const years = [];
+    for (let y = trendYearFrom; y <= state.filters.yearTo; y++) years.push(y);
+
+    const totalMap = Object.fromEntries(totalByYear.map(g => [g.key, g.count]));
+    const oaMap = Object.fromEntries(oaByYear.map(g => [g.key, g.count]));
+
+    const totalCounts = years.map(y => totalMap[y] || 0);
+    const oaCounts = years.map(y => oaMap[y] || 0);
+
+    Plotly.newPlot('rp-trend-chart', [
+      {
+        x: years, y: totalCounts,
+        name: 'Total Works', type: 'scatter', mode: 'lines+markers',
+        line: { color: '#2b6cb0', width: 2 },
+        marker: { size: 6 }
+      },
+      {
+        x: years, y: oaCounts,
+        name: 'OA Works (Gold + Hybrid)', type: 'scatter', mode: 'lines+markers',
+        fill: 'tozeroy', fillcolor: 'rgba(214,158,46,0.15)',
+        line: { color: '#d69e2e', width: 2 },
+        marker: { size: 6 }
+      }
+    ], {
+      ...PLOTLY_LAYOUT,
+      xaxis: { title: 'Publication Year', dtick: 1 },
+      yaxis: { title: 'Number of Works' },
+      shapes: [{
+        type: 'line', x0: pub.startYear, x1: pub.startYear,
+        y0: 0, y1: 1, yref: 'paper',
+        line: { color: '#e53e3e', width: 2, dash: 'dash' }
+      }],
+      annotations: [{
+        x: pub.startYear, y: 1.05, yref: 'paper',
+        text: 'R&P Agreement Start', showarrow: false,
+        font: { color: '#e53e3e', size: 12 }
+      }]
+    }, PLOTLY_CONFIG);
+
+    hideLoading('rp-trend-loading');
+  } catch (err) {
+    hideLoading('rp-trend-loading');
+    showError('rp-trend-chart', err.message);
+  }
+
+  // Breakdown chart
+  try {
+    const breakdownFilter = buildFilter({ publisher: pub.id });
+    const breakdownData = await fetchGroupBy(breakdownFilter, 'oa_status');
+
+    const filtered = breakdownData.filter(g => g.key !== 'unknown');
+    Plotly.newPlot('rp-breakdown-chart', [{
+      labels: filtered.map(g => OA_LABELS[g.key] || g.key),
+      values: filtered.map(g => g.count),
+      type: 'pie', hole: 0.4,
+      marker: { colors: filtered.map(g => OA_COLORS[g.key] || '#ccc') },
+      textinfo: 'label+percent',
+      textposition: 'outside'
+    }], {
+      ...PLOTLY_LAYOUT,
+      margin: { t: 20, r: 20, b: 20, l: 20 },
+      showlegend: false,
+    }, PLOTLY_CONFIG);
+
+    hideLoading('rp-breakdown-loading');
+  } catch (err) {
+    hideLoading('rp-breakdown-loading');
+    showError('rp-breakdown-chart', err.message);
+  }
+
+  // Subfields chart
+  try {
+    const sfFilter = buildFilter({ publisher: pub.id, oaStatus: 'gold|hybrid' });
+    const sfData = await fetchGroupBy(sfFilter, 'topics.subfield.id');
+
+    const top15 = sfData.sort((a, b) => b.count - a.count).slice(0, 15).reverse();
+
+    Plotly.newPlot('rp-subfields-chart', [{
+      y: top15.map(g => g.key_display_name),
+      x: top15.map(g => g.count),
+      type: 'bar', orientation: 'h',
+      marker: { color: '#d69e2e' }
+    }], {
+      ...PLOTLY_LAYOUT,
+      margin: { ...PLOTLY_LAYOUT.margin, l: 250 },
+      xaxis: { title: 'Number of OA Works' },
+      yaxis: { automargin: true },
+    }, PLOTLY_CONFIG);
+
+    hideLoading('rp-subfields-loading');
+  } catch (err) {
+    hideLoading('rp-subfields-loading');
+    showError('rp-subfields-chart', err.message);
+  }
+}
+
+// ============================================================
+// SUBJECT AREAS VIEW
+// ============================================================
+
+async function renderSubfieldsView() {
+  showLoading('subfields-loading');
+
+  try {
+    // Get total subfields (unfiltered by OA)
+    const totalFilter = buildFilter();
+    const totalData = await fetchGroupBy(totalFilter, 'topics.subfield.id');
+
+    const top25 = totalData.sort((a, b) => b.count - a.count).slice(0, 25);
+    const top25Names = top25.map(g => g.key_display_name);
+    const top25Keys = top25.map(g => g.key);
+
+    // Fetch per OA status in parallel
+    const oaPromises = OA_STATUSES.map(status => {
+      const f = buildFilter({ oaStatus: status });
+      return fetchGroupBy(f, 'topics.subfield.id');
+    });
+
+    const oaResults = await Promise.all(oaPromises);
+
+    // Build stacked traces
+    const traces = OA_STATUSES.map((status, i) => {
+      const dataMap = Object.fromEntries(oaResults[i].map(g => [g.key, g.count]));
+      return {
+        y: top25Names.slice().reverse(),
+        x: top25Keys.slice().reverse().map(k => dataMap[k] || 0),
+        name: OA_LABELS[status],
+        type: 'bar',
+        orientation: 'h',
+        marker: { color: OA_COLORS[status] },
+        visible: state.filters.oaStatuses.includes(status) ? true : 'legendonly',
+      };
+    });
+
+    Plotly.newPlot('subfields-chart', traces, {
+      ...PLOTLY_LAYOUT,
+      barmode: 'stack',
+      margin: { ...PLOTLY_LAYOUT.margin, l: 250, b: 60 },
+      xaxis: { title: 'Number of Works' },
+      yaxis: { automargin: true },
+      height: 700,
+      legend: { orientation: 'h', y: -0.08 },
+    }, PLOTLY_CONFIG);
+
+    hideLoading('subfields-loading');
+  } catch (err) {
+    hideLoading('subfields-loading');
+    showError('subfields-chart', err.message);
+  }
+}
+
+// ============================================================
+// PUBLISHERS VIEW
+// ============================================================
+
+async function renderPublishersView() {
+  showLoading('publishers-loading');
+
+  try {
+    const totalFilter = buildFilter();
+    const totalData = await fetchGroupBy(totalFilter, 'primary_location.source.publisher_lineage');
+
+    const top25 = totalData.sort((a, b) => b.count - a.count).slice(0, 25);
+    const top25Names = top25.map(g => g.key_display_name);
+    const top25Keys = top25.map(g => g.key);
+
+    const oaPromises = OA_STATUSES.map(status => {
+      const f = buildFilter({ oaStatus: status });
+      return fetchGroupBy(f, 'primary_location.source.publisher_lineage');
+    });
+
+    const oaResults = await Promise.all(oaPromises);
+
+    const traces = OA_STATUSES.map((status, i) => {
+      const dataMap = Object.fromEntries(oaResults[i].map(g => [g.key, g.count]));
+      return {
+        y: top25Names.slice().reverse(),
+        x: top25Keys.slice().reverse().map(k => dataMap[k] || 0),
+        name: OA_LABELS[status],
+        type: 'bar',
+        orientation: 'h',
+        marker: { color: OA_COLORS[status] },
+        visible: state.filters.oaStatuses.includes(status) ? true : 'legendonly',
+      };
+    });
+
+    Plotly.newPlot('publishers-chart', traces, {
+      ...PLOTLY_LAYOUT,
+      barmode: 'stack',
+      margin: { ...PLOTLY_LAYOUT.margin, l: 250, b: 60 },
+      xaxis: { title: 'Number of Works' },
+      yaxis: { automargin: true },
+      height: 700,
+      legend: { orientation: 'h', y: -0.08 },
+    }, PLOTLY_CONFIG);
+
+    hideLoading('publishers-loading');
+  } catch (err) {
+    hideLoading('publishers-loading');
+    showError('publishers-chart', err.message);
+  }
+}
+
+// ============================================================
+// CITATION COMPARISON VIEW
+// ============================================================
+
+async function renderCitationsView() {
+  // Load citation data if not already loaded
+  if (!state.citationData) {
+    showLoading('citation-bar-loading');
+    showLoading('citation-dist-loading');
+    showLoading('citation-trend-loading');
+
+    try {
+      const resp = await fetch('citation_data.json');
+      if (!resp.ok) {
+        throw new Error('citation_data.json not found. Run generate_citations.py first to create it.');
+      }
+      state.citationData = await resp.json();
+    } catch (err) {
+      hideLoading('citation-bar-loading');
+      hideLoading('citation-dist-loading');
+      hideLoading('citation-trend-loading');
+      showError('citation-bar-chart', err.message);
+      document.getElementById('citation-summary').innerHTML = `
+        <div class="summary-card" style="grid-column: 1/-1;">
+          <div class="label">Citation data not available. Run <code>python generate_citations.py</code> to generate it.</div>
+        </div>`;
+      return;
+    }
+  }
+
+  const data = state.citationData;
+
+  // Generated at timestamp
+  if (data.generated_at) {
+    document.getElementById('citation-generated-at').textContent = `Last generated: ${new Date(data.generated_at).toLocaleDateString()}`;
+  }
+
+  // Summary cards
+  const oaTypes = ['gold', 'green', 'hybrid', 'bronze', 'diamond'];
+  let oaCiteSum = 0, oaCount = 0;
+  oaTypes.forEach(s => {
+    if (data.by_oa_status[s]) {
+      oaCiteSum += data.by_oa_status[s].mean_citations * data.by_oa_status[s].count;
+      oaCount += data.by_oa_status[s].count;
+    }
+  });
+  const meanOA = oaCount > 0 ? oaCiteSum / oaCount : 0;
+  const meanClosed = data.by_oa_status.closed ? data.by_oa_status.closed.mean_citations : 0;
+  const advantage = meanClosed > 0 ? ((meanOA - meanClosed) / meanClosed * 100).toFixed(0) : 'N/A';
+
+  document.getElementById('citation-summary').innerHTML = `
+    <div class="summary-card">
+      <div class="value" style="color: ${advantage > 0 ? '#38a169' : '#e53e3e'}">${advantage > 0 ? '+' : ''}${advantage}%</div>
+      <div class="label">OA Citation Advantage</div>
+    </div>
+    <div class="summary-card">
+      <div class="value">${meanOA.toFixed(1)}</div>
+      <div class="label">Mean OA Citations</div>
+    </div>
+    <div class="summary-card">
+      <div class="value">${meanClosed.toFixed(1)}</div>
+      <div class="label">Mean Closed Citations</div>
+    </div>
+    <div class="summary-card">
+      <div class="value">${formatNum(data.summary.total_works)}</div>
+      <div class="label">Total Works Analyzed</div>
+    </div>`;
+
+  // Bar chart: mean & median by OA status
+  const statuses = Object.keys(data.by_oa_status).filter(s => s !== 'unknown');
+
+  Plotly.newPlot('citation-bar-chart', [
+    {
+      x: statuses.map(s => OA_LABELS[s] || s),
+      y: statuses.map(s => data.by_oa_status[s].mean_citations),
+      name: 'Mean', type: 'bar',
+      marker: { color: statuses.map(s => OA_COLORS[s] || '#ccc') }
+    },
+    {
+      x: statuses.map(s => OA_LABELS[s] || s),
+      y: statuses.map(s => data.by_oa_status[s].median_citations),
+      name: 'Median', type: 'bar',
+      marker: { color: statuses.map(s => OA_COLORS[s] || '#ccc'), opacity: 0.5 }
+    }
+  ], {
+    ...PLOTLY_LAYOUT,
+    barmode: 'group',
+    yaxis: { title: 'Citations' },
+  }, PLOTLY_CONFIG);
+
+  hideLoading('citation-bar-loading');
+
+  // Distribution histogram
+  const distStatuses = ['gold', 'hybrid', 'closed'].filter(s => data.by_oa_status[s]);
+  const distTraces = distStatuses.map(status => {
+    const dist = data.by_oa_status[status].distribution;
+    const total = data.by_oa_status[status].count;
+    return {
+      x: dist.map(d => d.bin),
+      y: dist.map(d => (d.count / total * 100).toFixed(1)),
+      name: OA_LABELS[status],
+      type: 'bar',
+      marker: { color: OA_COLORS[status] }
+    };
+  });
+
+  Plotly.newPlot('citation-dist-chart', distTraces, {
+    ...PLOTLY_LAYOUT,
+    barmode: 'group',
+    xaxis: { title: 'Citation Count Range' },
+    yaxis: { title: '% of Works' },
+  }, PLOTLY_CONFIG);
+
+  hideLoading('citation-dist-loading');
+
+  // Trend chart: mean citations over time
+  if (data.by_year) {
+    const years = Object.keys(data.by_year).sort();
+    const trendStatuses = ['gold', 'hybrid', 'closed'].filter(s =>
+      years.some(y => data.by_year[y][s])
+    );
+
+    const trendTraces = trendStatuses.map(status => ({
+      x: years,
+      y: years.map(y => data.by_year[y][status] ? data.by_year[y][status].mean_citations || 0 : 0),
+      name: OA_LABELS[status],
+      type: 'scatter', mode: 'lines+markers',
+      line: { color: OA_COLORS[status], width: 2 },
+      marker: { size: 6 }
+    }));
+
+    Plotly.newPlot('citation-trend-chart', trendTraces, {
+      ...PLOTLY_LAYOUT,
+      xaxis: { title: 'Publication Year', dtick: 1 },
+      yaxis: { title: 'Mean Citations' },
+    }, PLOTLY_CONFIG);
+  }
+
+  hideLoading('citation-trend-loading');
+}
+
+// ============================================================
+// INITIALIZATION
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', function() {
+  initFilters();
+  initRPPills();
+  renderCurrentView();
+});
+</script>
+
+</body>
+</html>

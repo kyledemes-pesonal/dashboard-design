@@ -1,0 +1,442 @@
+{
+  "generated_at": "2026-03-08T00:51:46.944667Z",
+  "parameters": {
+    "institutions": "All VIVA (69 institutions)",
+    "years": "2020-2025"
+  },
+  "summary": {
+    "total_works": 183507,
+    "oa_works": 107196,
+    "closed_works": 76311
+  },
+  "by_oa_status": {
+    "bronze": {
+      "count": 11310,
+      "mean_citations": 20.37,
+      "median_citations": 2.0,
+      "percentile_25": 0,
+      "percentile_75": 14,
+      "percentile_90": 41,
+      "max_citations": 8048,
+      "distribution": [
+        {
+          "bin": "0",
+          "count": 4007
+        },
+        {
+          "bin": "1-5",
+          "count": 2981
+        },
+        {
+          "bin": "6-10",
+          "count": 1052
+        },
+        {
+          "bin": "11-25",
+          "count": 1511
+        },
+        {
+          "bin": "26-50",
+          "count": 855
+        },
+        {
+          "bin": "51-100",
+          "count": 472
+        },
+        {
+          "bin": "100+",
+          "count": 432
+        }
+      ]
+    },
+    "gold": {
+      "count": 37145,
+      "mean_citations": 11.53,
+      "median_citations": 3,
+      "percentile_25": 0,
+      "percentile_75": 10,
+      "percentile_90": 27,
+      "max_citations": 6027,
+      "distribution": [
+        {
+          "bin": "0",
+          "count": 11505
+        },
+        {
+          "bin": "1-5",
+          "count": 12089
+        },
+        {
+          "bin": "6-10",
+          "count": 4407
+        },
+        {
+          "bin": "11-25",
+          "count": 5221
+        },
+        {
+          "bin": "26-50",
+          "count": 2291
+        },
+        {
+          "bin": "51-100",
+          "count": 1068
+        },
+        {
+          "bin": "100+",
+          "count": 564
+        }
+      ]
+    },
+    "closed": {
+      "count": 76311,
+      "mean_citations": 7.69,
+      "median_citations": 1,
+      "percentile_25": 0,
+      "percentile_75": 6,
+      "percentile_90": 18,
+      "max_citations": 5569,
+      "distribution": [
+        {
+          "bin": "0",
+          "count": 32916
+        },
+        {
+          "bin": "1-5",
+          "count": 22994
+        },
+        {
+          "bin": "6-10",
+          "count": 7343
+        },
+        {
+          "bin": "11-25",
+          "count": 7808
+        },
+        {
+          "bin": "26-50",
+          "count": 3270
+        },
+        {
+          "bin": "51-100",
+          "count": 1300
+        },
+        {
+          "bin": "100+",
+          "count": 680
+        }
+      ]
+    },
+    "green": {
+      "count": 33176,
+      "mean_citations": 9.47,
+      "median_citations": 0.0,
+      "percentile_25": 0,
+      "percentile_75": 5,
+      "percentile_90": 21,
+      "max_citations": 2593,
+      "distribution": [
+        {
+          "bin": "0",
+          "count": 18045
+        },
+        {
+          "bin": "1-5",
+          "count": 6945
+        },
+        {
+          "bin": "6-10",
+          "count": 2391
+        },
+        {
+          "bin": "11-25",
+          "count": 3066
+        },
+        {
+          "bin": "26-50",
+          "count": 1526
+        },
+        {
+          "bin": "51-100",
+          "count": 719
+        },
+        {
+          "bin": "100+",
+          "count": 484
+        }
+      ]
+    },
+    "hybrid": {
+      "count": 14421,
+      "mean_citations": 14.9,
+      "median_citations": 3,
+      "percentile_25": 0,
+      "percentile_75": 11,
+      "percentile_90": 31,
+      "max_citations": 2564,
+      "distribution": [
+        {
+          "bin": "0",
+          "count": 3697
+        },
+        {
+          "bin": "1-5",
+          "count": 4995
+        },
+        {
+          "bin": "6-10",
+          "count": 1900
+        },
+        {
+          "bin": "11-25",
+          "count": 2055
+        },
+        {
+          "bin": "26-50",
+          "count": 1002
+        },
+        {
+          "bin": "51-100",
+          "count": 454
+        },
+        {
+          "bin": "100+",
+          "count": 318
+        }
+      ]
+    },
+    "diamond": {
+      "count": 11144,
+      "mean_citations": 4.81,
+      "median_citations": 1.0,
+      "percentile_25": 0,
+      "percentile_75": 4,
+      "percentile_90": 11,
+      "max_citations": 1123,
+      "distribution": [
+        {
+          "bin": "0",
+          "count": 4817
+        },
+        {
+          "bin": "1-5",
+          "count": 4237
+        },
+        {
+          "bin": "6-10",
+          "count": 943
+        },
+        {
+          "bin": "11-25",
+          "count": 788
+        },
+        {
+          "bin": "26-50",
+          "count": 240
+        },
+        {
+          "bin": "51-100",
+          "count": 77
+        },
+        {
+          "bin": "100+",
+          "count": 42
+        }
+      ]
+    }
+  },
+  "by_year": {
+    "2020": {
+      "bronze": {
+        "count": 2548,
+        "mean_citations": 42.28,
+        "median_citations": 9.0
+      },
+      "closed": {
+        "count": 13825,
+        "mean_citations": 16.13,
+        "median_citations": 4
+      },
+      "gold": {
+        "count": 5548,
+        "mean_citations": 23.56,
+        "median_citations": 7.0
+      },
+      "green": {
+        "count": 10472,
+        "mean_citations": 10.64,
+        "median_citations": 0.0
+      },
+      "hybrid": {
+        "count": 1114,
+        "mean_citations": 40.83,
+        "median_citations": 17.0
+      },
+      "diamond": {
+        "count": 1540,
+        "mean_citations": 10.03,
+        "median_citations": 2.0
+      }
+    },
+    "2021": {
+      "green": {
+        "count": 5260,
+        "mean_citations": 15.64,
+        "median_citations": 3.0
+      },
+      "hybrid": {
+        "count": 1387,
+        "mean_citations": 37.41,
+        "median_citations": 13
+      },
+      "gold": {
+        "count": 5575,
+        "mean_citations": 19.33,
+        "median_citations": 7
+      },
+      "closed": {
+        "count": 12431,
+        "mean_citations": 11.86,
+        "median_citations": 4
+      },
+      "bronze": {
+        "count": 2270,
+        "mean_citations": 28.3,
+        "median_citations": 7.0
+      },
+      "diamond": {
+        "count": 1653,
+        "mean_citations": 6.66,
+        "median_citations": 2
+      }
+    },
+    "2022": {
+      "gold": {
+        "count": 5902,
+        "mean_citations": 14.41,
+        "median_citations": 5.0
+      },
+      "green": {
+        "count": 4670,
+        "mean_citations": 13.52,
+        "median_citations": 2.0
+      },
+      "bronze": {
+        "count": 1654,
+        "mean_citations": 19.19,
+        "median_citations": 4.0
+      },
+      "hybrid": {
+        "count": 2033,
+        "mean_citations": 20.74,
+        "median_citations": 9
+      },
+      "closed": {
+        "count": 12373,
+        "mean_citations": 8.5,
+        "median_citations": 2
+      },
+      "diamond": {
+        "count": 1732,
+        "mean_citations": 5.84,
+        "median_citations": 1.0
+      }
+    },
+    "2023": {
+      "hybrid": {
+        "count": 2531,
+        "mean_citations": 16.07,
+        "median_citations": 6
+      },
+      "green": {
+        "count": 4953,
+        "mean_citations": 7.57,
+        "median_citations": 1
+      },
+      "gold": {
+        "count": 6588,
+        "mean_citations": 9.56,
+        "median_citations": 3.0
+      },
+      "diamond": {
+        "count": 2046,
+        "mean_citations": 4.76,
+        "median_citations": 1.0
+      },
+      "closed": {
+        "count": 11387,
+        "mean_citations": 5.65,
+        "median_citations": 1
+      },
+      "bronze": {
+        "count": 2235,
+        "mean_citations": 8.44,
+        "median_citations": 1
+      }
+    },
+    "2024": {
+      "hybrid": {
+        "count": 3527,
+        "mean_citations": 8.06,
+        "median_citations": 3
+      },
+      "green": {
+        "count": 3313,
+        "mean_citations": 5.06,
+        "median_citations": 1
+      },
+      "closed": {
+        "count": 12952,
+        "mean_citations": 2.8,
+        "median_citations": 0.0
+      },
+      "gold": {
+        "count": 6918,
+        "mean_citations": 4.85,
+        "median_citations": 2.0
+      },
+      "bronze": {
+        "count": 1549,
+        "mean_citations": 4.36,
+        "median_citations": 1
+      },
+      "diamond": {
+        "count": 2200,
+        "mean_citations": 2.5,
+        "median_citations": 1.0
+      }
+    },
+    "2025": {
+      "closed": {
+        "count": 13343,
+        "mean_citations": 0.82,
+        "median_citations": 0
+      },
+      "hybrid": {
+        "count": 3829,
+        "mean_citations": 1.64,
+        "median_citations": 0
+      },
+      "diamond": {
+        "count": 1973,
+        "mean_citations": 0.91,
+        "median_citations": 0
+      },
+      "bronze": {
+        "count": 1054,
+        "mean_citations": 0.99,
+        "median_citations": 0.0
+      },
+      "gold": {
+        "count": 6614,
+        "mean_citations": 1.25,
+        "median_citations": 0.0
+      },
+      "green": {
+        "count": 4508,
+        "mean_citations": 0.67,
+        "median_citations": 0.0
+      }
+    }
+  }
+}
