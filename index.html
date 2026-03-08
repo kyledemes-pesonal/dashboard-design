@@ -104,13 +104,13 @@
       position: absolute;
       top: 100%;
       left: 0;
-      right: 0;
+      min-width: 340px;
       background: white;
       border: 1px solid var(--border);
       border-radius: 6px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       z-index: 100;
-      max-height: 300px;
+      max-height: 400px;
       overflow-y: auto;
     }
     .multi-select-dropdown.open { display: block; }
@@ -119,12 +119,13 @@
       align-items: center;
       gap: 0.5rem;
       padding: 0.35rem 0.75rem;
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       cursor: pointer;
       text-transform: none;
       letter-spacing: normal;
       font-weight: normal;
       color: var(--text);
+      white-space: nowrap;
     }
     .multi-select-dropdown label:hover { background: var(--bg); }
     .multi-select-actions {
@@ -283,6 +284,25 @@
     }
     .error-msg button { margin-top: 0.5rem; }
 
+    /* Query links */
+    .query-link {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+      border-top: 1px solid var(--border);
+    }
+    .query-link a {
+      font-size: 0.75rem;
+      color: var(--secondary);
+      text-decoration: none;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+    .query-link a:hover { opacity: 1; text-decoration: underline; }
+    .query-link svg { width: 14px; height: 14px; flex-shrink: 0; opacity: 0.5; }
+
     /* Footer */
     footer {
       text-align: center;
@@ -388,17 +408,20 @@
     <div class="card chart-wrap" id="rp-trend-wrap">
       <h3>OA Publishing Trend</h3>
       <div id="rp-trend-chart"></div>
+      <div class="query-link" id="rp-trend-query"></div>
       <div class="loading-overlay" id="rp-trend-loading"><div class="spinner"></div><div class="loading-text">Loading...</div></div>
     </div>
     <div class="chart-row">
       <div class="card chart-wrap" id="rp-breakdown-wrap">
         <h3>Current OA Status Breakdown</h3>
         <div id="rp-breakdown-chart"></div>
+        <div class="query-link" id="rp-breakdown-query"></div>
         <div class="loading-overlay" id="rp-breakdown-loading"><div class="spinner"></div><div class="loading-text">Loading...</div></div>
       </div>
       <div class="card chart-wrap" id="rp-subfields-wrap">
         <h3>Top Subfields (OA Publishing)</h3>
         <div id="rp-subfields-chart"></div>
+        <div class="query-link" id="rp-subfields-query"></div>
         <div class="loading-overlay" id="rp-subfields-loading"><div class="spinner"></div><div class="loading-text">Loading...</div></div>
       </div>
     </div>
@@ -409,6 +432,7 @@
     <div class="card chart-wrap" id="subfields-chart-wrap">
       <h3>Top 25 Subject Areas by Publication Count</h3>
       <div id="subfields-chart" style="min-height: 700px;"></div>
+      <div class="query-link" id="subfields-query"></div>
       <div class="loading-overlay" id="subfields-loading"><div class="spinner"></div><div class="loading-text">Loading...</div></div>
     </div>
   </div>
@@ -418,6 +442,7 @@
     <div class="card chart-wrap" id="publishers-chart-wrap">
       <h3>Top 25 Publishers by Publication Count</h3>
       <div id="publishers-chart" style="min-height: 700px;"></div>
+      <div class="query-link" id="publishers-query"></div>
       <div class="loading-overlay" id="publishers-loading"><div class="spinner"></div><div class="loading-text">Loading...</div></div>
     </div>
   </div>
@@ -684,6 +709,37 @@ function formatNum(n) {
   return n != null ? n.toLocaleString() : '0';
 }
 
+// Build a user-facing OpenAlex API URL (no api_key) and render a link
+function buildQueryUrl(filter, groupBy) {
+  return `${BASE_URL}/works?filter=${encodeURIComponent(filter)}&group_by=${encodeURIComponent(groupBy)}&per_page=200`;
+}
+
+function setQueryLink(containerId, filter, groupBy, label) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const url = buildQueryUrl(filter, groupBy);
+  const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M12.232 4.232a2.5 2.5 0 013.536 3.536l-1.225 1.224a.75.75 0 001.061 1.06l1.224-1.224a4 4 0 00-5.656-5.656l-3 3a4 4 0 00.225 5.865.75.75 0 00.977-1.138 2.5 2.5 0 01-.142-3.667l3-3z"/><path d="M11.603 7.963a.75.75 0 00-.977 1.138 2.5 2.5 0 01.142 3.667l-3 3a2.5 2.5 0 01-3.536-3.536l1.225-1.224a.75.75 0 00-1.061-1.06l-1.224 1.224a4 4 0 105.656 5.656l3-3a4 4 0 00-.225-5.865z"/></svg>`;
+  el.innerHTML = `${svgIcon}<a href="${url}" target="_blank" rel="noopener" title="View this query in OpenAlex API">View in OpenAlex: ${label || groupBy}</a>`;
+}
+
+// Attach click-to-open-OpenAlex handler + pointer cursor on chart hover
+function addOpenAlexClickHandler(divId) {
+  const el = document.getElementById(divId);
+  if (!el) return;
+  el.on('plotly_click', function(data) {
+    if (data.points && data.points[0] && data.points[0].customdata) {
+      window.open(data.points[0].customdata, '_blank');
+    }
+  });
+  el.on('plotly_hover', function() { el.style.cursor = 'pointer'; });
+  el.on('plotly_unhover', function() { el.style.cursor = 'default'; });
+}
+
+// Build a single-work list URL (no group_by) for clicking into specific data points
+function buildWorksUrl(filter) {
+  return `${BASE_URL}/works?filter=${encodeURIComponent(filter)}&per_page=25&sort=cited_by_count:desc`;
+}
+
 // ============================================================
 // FILTER INITIALIZATION
 // ============================================================
@@ -878,19 +934,35 @@ async function renderRPView() {
     const totalCounts = years.map(y => totalMap[y] || 0);
     const oaCounts = years.map(y => oaMap[y] || 0);
 
+    // Build per-year URLs for click-through
+    const trendTotalUrls = years.map(y => {
+      const ids = getInstitutionIds();
+      const f = `authorships.institutions.id:${ids.join('|')},publication_year:${y},primary_location.source.publisher_lineage:${pub.id}`;
+      return buildWorksUrl(f);
+    });
+    const trendOAUrls = years.map(y => {
+      const ids = getInstitutionIds();
+      const f = `authorships.institutions.id:${ids.join('|')},publication_year:${y},primary_location.source.publisher_lineage:${pub.id},oa_status:gold|hybrid`;
+      return buildWorksUrl(f);
+    });
+
     Plotly.newPlot('rp-trend-chart', [
       {
         x: years, y: totalCounts,
         name: 'Total Works', type: 'scatter', mode: 'lines+markers',
         line: { color: '#2b6cb0', width: 2 },
-        marker: { size: 6 }
+        marker: { size: 6 },
+        customdata: trendTotalUrls,
+        hovertemplate: '<b>%{x}</b><br>Total: %{y:,} works<br>🔗 Click to view in OpenAlex<extra></extra>'
       },
       {
         x: years, y: oaCounts,
         name: 'OA Works (Gold + Hybrid)', type: 'scatter', mode: 'lines+markers',
         fill: 'tozeroy', fillcolor: 'rgba(214,158,46,0.15)',
         line: { color: '#d69e2e', width: 2 },
-        marker: { size: 6 }
+        marker: { size: 6 },
+        customdata: trendOAUrls,
+        hovertemplate: '<b>%{x}</b><br>OA: %{y:,} works<br>🔗 Click to view in OpenAlex<extra></extra>'
       }
     ], {
       ...PLOTLY_LAYOUT,
@@ -908,6 +980,8 @@ async function renderRPView() {
       }]
     }, PLOTLY_CONFIG);
 
+    addOpenAlexClickHandler('rp-trend-chart');
+    setQueryLink('rp-trend-query', trendFilterBase, 'publication_year', `${pub.name} works by year`);
     hideLoading('rp-trend-loading');
   } catch (err) {
     hideLoading('rp-trend-loading');
@@ -920,19 +994,27 @@ async function renderRPView() {
     const breakdownData = await fetchGroupBy(breakdownFilter, 'oa_status');
 
     const filtered = breakdownData.filter(g => g.key !== 'unknown');
+    const breakdownUrls = filtered.map(g => {
+      const f = buildFilter({ publisher: pub.id, oaStatus: g.key });
+      return buildWorksUrl(f);
+    });
     Plotly.newPlot('rp-breakdown-chart', [{
       labels: filtered.map(g => OA_LABELS[g.key] || g.key),
       values: filtered.map(g => g.count),
       type: 'pie', hole: 0.4,
       marker: { colors: filtered.map(g => OA_COLORS[g.key] || '#ccc') },
       textinfo: 'label+percent',
-      textposition: 'outside'
+      textposition: 'outside',
+      customdata: breakdownUrls,
+      hovertemplate: '<b>%{label}</b><br>%{value:,} works (%{percent})<br>🔗 Click to view in OpenAlex<extra></extra>'
     }], {
       ...PLOTLY_LAYOUT,
       margin: { t: 20, r: 20, b: 20, l: 20 },
       showlegend: false,
     }, PLOTLY_CONFIG);
 
+    addOpenAlexClickHandler('rp-breakdown-chart');
+    setQueryLink('rp-breakdown-query', breakdownFilter, 'oa_status', `${pub.name} OA status breakdown`);
     hideLoading('rp-breakdown-loading');
   } catch (err) {
     hideLoading('rp-breakdown-loading');
@@ -946,11 +1028,18 @@ async function renderRPView() {
 
     const top15 = sfData.sort((a, b) => b.count - a.count).slice(0, 15).reverse();
 
+    const sfUrls = top15.map(g => {
+      const f = buildFilter({ publisher: pub.id, oaStatus: 'gold|hybrid', subfield: g.key });
+      return buildWorksUrl(f);
+    });
+
     Plotly.newPlot('rp-subfields-chart', [{
       y: top15.map(g => g.key_display_name),
       x: top15.map(g => g.count),
       type: 'bar', orientation: 'h',
-      marker: { color: '#d69e2e' }
+      marker: { color: '#d69e2e' },
+      customdata: sfUrls,
+      hovertemplate: '<b>%{y}</b><br>%{x:,} OA works<br>🔗 Click to view in OpenAlex<extra></extra>'
     }], {
       ...PLOTLY_LAYOUT,
       margin: { ...PLOTLY_LAYOUT.margin, l: 250 },
@@ -958,6 +1047,8 @@ async function renderRPView() {
       yaxis: { automargin: true },
     }, PLOTLY_CONFIG);
 
+    addOpenAlexClickHandler('rp-subfields-chart');
+    setQueryLink('rp-subfields-query', sfFilter, 'topics.subfield.id', `${pub.name} OA subfields`);
     hideLoading('rp-subfields-loading');
   } catch (err) {
     hideLoading('rp-subfields-loading');
@@ -989,17 +1080,24 @@ async function renderSubfieldsView() {
 
     const oaResults = await Promise.all(oaPromises);
 
-    // Build stacked traces
+    // Build stacked traces with click-through URLs
     const traces = OA_STATUSES.map((status, i) => {
       const dataMap = Object.fromEntries(oaResults[i].map(g => [g.key, g.count]));
+      const reversedKeys = top25Keys.slice().reverse();
+      const urls = reversedKeys.map(k => {
+        const f = buildFilter({ oaStatus: status, subfield: k });
+        return buildWorksUrl(f);
+      });
       return {
         y: top25Names.slice().reverse(),
-        x: top25Keys.slice().reverse().map(k => dataMap[k] || 0),
+        x: reversedKeys.map(k => dataMap[k] || 0),
         name: OA_LABELS[status],
         type: 'bar',
         orientation: 'h',
         marker: { color: OA_COLORS[status] },
         visible: state.filters.oaStatuses.includes(status) ? true : 'legendonly',
+        customdata: urls,
+        hovertemplate: '<b>%{y}</b><br>%{x:,} works (' + OA_LABELS[status] + ')<br>🔗 Click to view in OpenAlex<extra></extra>'
       };
     });
 
@@ -1013,6 +1111,8 @@ async function renderSubfieldsView() {
       legend: { orientation: 'h', y: -0.08 },
     }, PLOTLY_CONFIG);
 
+    addOpenAlexClickHandler('subfields-chart');
+    setQueryLink('subfields-query', totalFilter, 'topics.subfield.id', 'VIVA works by subfield');
     hideLoading('subfields-loading');
   } catch (err) {
     hideLoading('subfields-loading');
@@ -1044,14 +1144,21 @@ async function renderPublishersView() {
 
     const traces = OA_STATUSES.map((status, i) => {
       const dataMap = Object.fromEntries(oaResults[i].map(g => [g.key, g.count]));
+      const reversedKeys = top25Keys.slice().reverse();
+      const urls = reversedKeys.map(k => {
+        const f = buildFilter({ oaStatus: status, publisher: k });
+        return buildWorksUrl(f);
+      });
       return {
         y: top25Names.slice().reverse(),
-        x: top25Keys.slice().reverse().map(k => dataMap[k] || 0),
+        x: reversedKeys.map(k => dataMap[k] || 0),
         name: OA_LABELS[status],
         type: 'bar',
         orientation: 'h',
         marker: { color: OA_COLORS[status] },
         visible: state.filters.oaStatuses.includes(status) ? true : 'legendonly',
+        customdata: urls,
+        hovertemplate: '<b>%{y}</b><br>%{x:,} works (' + OA_LABELS[status] + ')<br>🔗 Click to view in OpenAlex<extra></extra>'
       };
     });
 
@@ -1065,6 +1172,8 @@ async function renderPublishersView() {
       legend: { orientation: 'h', y: -0.08 },
     }, PLOTLY_CONFIG);
 
+    addOpenAlexClickHandler('publishers-chart');
+    setQueryLink('publishers-query', totalFilter, 'primary_location.source.publisher_lineage', 'VIVA works by publisher');
     hideLoading('publishers-loading');
   } catch (err) {
     hideLoading('publishers-loading');
